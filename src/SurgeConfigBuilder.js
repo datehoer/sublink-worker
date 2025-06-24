@@ -1,17 +1,12 @@
 import { BaseConfigBuilder } from './BaseConfigBuilder.js';
 import { SURGE_CONFIG, SURGE_SITE_RULE_SET_BASEURL, SURGE_IP_RULE_SET_BASEURL, generateRules, getOutbounds, PREDEFINED_RULE_SETS } from './config.js';
 import { t } from './i18n/index.js';
+import { DeepCopy } from './utils.js';
 
 export class SurgeConfigBuilder extends BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent) {
-        // Not yet implemented, set aside for later use ;)
-        // if (!baseConfig) {
-        //     baseConfig = SURGE_CONFIG;
-        // }
-        baseConfig = SURGE_CONFIG;
-        super(inputString, baseConfig, lang, userAgent);
-        this.selectedRules = selectedRules;
-        this.customRules = customRules;
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols = [], excludedSSMethods = '') {
+        super(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods);
+        this.config = DeepCopy(baseConfig || SURGE_CONFIG);
         this.subscriptionUrl = null;
     }
 

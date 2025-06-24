@@ -7,6 +7,83 @@ import { PREDEFINED_RULE_SETS } from './config.js';
 import { t, setLanguage } from './i18n/index.js';
 import yaml from 'js-yaml';
 
+// Helper function to filter proxy lines based on excluded protocols
+function filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods = '') {
+  if (!excludedProtocols || excludedProtocols.length === 0) {
+    const excludedMethods = excludedSSMethods ? excludedSSMethods.split(',').map(method => method.trim().toLowerCase()) : [];
+    if (excludedMethods.length === 0) {
+      return proxyLines.filter(line => line.trim() !== '');
+    }
+  }
+  
+  const excludedMethods = excludedSSMethods ? excludedSSMethods.split(',').map(method => method.trim().toLowerCase()) : [];
+  
+  return proxyLines.filter(line => {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) return false;
+    
+    // Check protocol type and filter
+    for (const protocol of excludedProtocols) {
+      switch (protocol) {
+        case 'shadowsocks':
+          if (trimmedLine.startsWith('ss://')) return false;
+          break;
+        case 'vmess':
+          if (trimmedLine.startsWith('vmess://')) return false;
+          break;
+        case 'vless':
+          if (trimmedLine.startsWith('vless://')) return false;
+          break;
+        case 'hysteria2':
+          if (trimmedLine.startsWith('hysteria2://') || 
+              trimmedLine.startsWith('hy2://') || 
+              trimmedLine.startsWith('hysteria://')) return false;
+          break;
+        case 'trojan':
+          if (trimmedLine.startsWith('trojan://')) return false;
+          break;
+        case 'tuic':
+          if (trimmedLine.startsWith('tuic://')) return false;
+          break;
+      }
+    }
+    
+    // Check SS methods for ShadowSocks links
+    if (excludedMethods.length > 0 && trimmedLine.startsWith('ss://')) {
+      try {
+        // Parse SS link to get method
+        let parts = trimmedLine.replace('ss://', '').split('#');
+        let mainPart = parts[0];
+        
+        let method = '';
+        
+        // Try new format first
+        let [base64, serverPart] = mainPart.split('@');
+        if (serverPart) {
+          // New format: base64(method:password)@server:port
+          let decodedParts = atob(decodeURIComponent(base64)).split(':');
+          method = decodedParts[0];
+        } else {
+          // Legacy format: base64(method:password@server:port)
+          let decoded = atob(mainPart);
+          let [methodAndPass] = decoded.split('@');
+          let [methodName] = methodAndPass.split(':');
+          method = methodName;
+        }
+        
+        if (method && excludedMethods.includes(method.toLowerCase())) {
+          return false;
+        }
+      } catch (e) {
+        // If parsing fails, keep the line
+        console.warn('Failed to parse SS method for filtering:', e);
+      }
+    }
+    
+    return true;
+  });
+}
+
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request))
 })
@@ -25,6 +102,8 @@ async function handleRequest(request) {
       const inputString = url.searchParams.get('config');
       let selectedRules = url.searchParams.get('selectedRules');
       let customRules = url.searchParams.get('customRules');
+      let excludedProtocols = url.searchParams.get('excludedProtocols');
+      let excludedSSMethods = url.searchParams.get('excludedSSMethods');
       // 获取语言参数，如果为空则使用默认值
       let lang = url.searchParams.get('lang') || 'zh-CN';
       // Get custom UserAgent
@@ -56,6 +135,22 @@ async function handleRequest(request) {
         customRules = [];
       }
 
+      // Deal with excluded protocols
+      try {
+        excludedProtocols = excludedProtocols ? JSON.parse(decodeURIComponent(excludedProtocols)) : [];
+      } catch (error) {
+        console.error('Error parsing excludedProtocols:', error);
+        excludedProtocols = [];
+      }
+
+      // Deal with excluded SS methods
+      try {
+        excludedSSMethods = excludedSSMethods ? decodeURIComponent(excludedSSMethods) : '';
+      } catch (error) {
+        console.error('Error parsing excludedSSMethods:', error);
+        excludedSSMethods = '';
+      }
+
       // Modify the existing conversion logic
       const configId = url.searchParams.get('configId');
       let baseConfig;
@@ -68,11 +163,11 @@ async function handleRequest(request) {
 
       let configBuilder;
       if (url.pathname.startsWith('/singbox')) {
-        configBuilder = new SingboxConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent);
+        configBuilder = new SingboxConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods);
       } else if (url.pathname.startsWith('/clash')) {
-        configBuilder = new ClashConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent);
+        configBuilder = new ClashConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods);
       } else {
-        configBuilder = new SurgeConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent)
+        configBuilder = new SurgeConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods)
           .setSubscriptionUrl(url.href);
       }
 
@@ -156,6 +251,25 @@ async function handleRequest(request) {
     } else if (url.pathname.startsWith('/xray')) {
       // Handle Xray config requests
       const inputString = url.searchParams.get('config');
+      let excludedProtocols = url.searchParams.get('excludedProtocols');
+      let excludedSSMethods = url.searchParams.get('excludedSSMethods');
+      
+      // Deal with excluded protocols for Xray
+      try {
+        excludedProtocols = excludedProtocols ? JSON.parse(decodeURIComponent(excludedProtocols)) : [];
+      } catch (error) {
+        console.error('Error parsing excludedProtocols for Xray:', error);
+        excludedProtocols = [];
+      }
+
+      // Deal with excluded SS methods for Xray
+      try {
+        excludedSSMethods = excludedSSMethods ? decodeURIComponent(excludedSSMethods) : '';
+      } catch (error) {
+        console.error('Error parsing excludedSSMethods for Xray:', error);
+        excludedSSMethods = '';
+      }
+      
       const proxylist = inputString.split('\n');
 
       const finalProxyList = [];
@@ -182,12 +296,20 @@ async function handleRequest(request) {
             if (decodedText.includes('%')) {
               decodedText = decodeURIComponent(decodedText);
             }
-            finalProxyList.push(...decodedText.split('\n'));
+            
+            // Filter protocols for decoded proxy list
+            const proxyLines = decodedText.split('\n');
+            const filteredProxyLines = filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods);
+            finalProxyList.push(...filteredProxyLines);
           } catch (e) {
             console.warn('Failed to fetch the proxy:', e);
           }
         } else {
-          finalProxyList.push(proxy);
+          // Filter individual proxy line
+          const filteredProxy = filterProxyLines([proxy], excludedProtocols, excludedSSMethods);
+          if (filteredProxy.length > 0) {
+            finalProxyList.push(...filteredProxy);
+          }
         }
       }
 

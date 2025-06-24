@@ -96,6 +96,7 @@ const generateAdvancedOptionsToggle = () => `
 const generateAdvancedOptions = () => `
   <div id="advancedOptions">
     ${generateRuleSetSelection()}
+    ${generateProtocolFilterSection()}
     ${generateBaseConfigSection()}
     ${generateUASection()}
   </div>
@@ -584,6 +585,19 @@ const submitFormFunction = () => `
     localStorage.setItem('configEditor', document.getElementById('configEditor').value);
     localStorage.setItem('configType', document.getElementById('configType').value);
     
+    // Get excluded protocols
+    const excludedProtocols = Array.from(document.querySelectorAll('input[name="excludedProtocols"]:checked'))
+      .map(checkbox => checkbox.value);
+    
+    // Get excluded SS methods
+    const excludedSSMethods = document.getElementById('excludedSSMethods').value;
+    
+    // Save excluded protocols to localStorage
+    localStorage.setItem('excludedProtocols', JSON.stringify(excludedProtocols));
+    
+    // Save excluded SS methods to localStorage
+    localStorage.setItem('excludedSSMethods', excludedSSMethods);
+    
     let selectedRules;
     const predefinedRules = document.getElementById('predefinedRules').value;
     if (predefinedRules !== 'custom') {
@@ -599,10 +613,14 @@ const submitFormFunction = () => `
     const customRules = parseCustomRules();
 
     const configParam = configId ? \`&configId=\${configId}\` : '';
-    const xrayUrl = \`\${window.location.origin}/xray?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}\${configParam}\`;
-    const singboxUrl = \`\${window.location.origin}/singbox?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${configParam}\`;
-    const clashUrl = \`\${window.location.origin}/clash?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${configParam}\`;
-    const surgeUrl = \`\${window.location.origin}/surge?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${configParam}\`;
+    const excludedParam = excludedProtocols.length > 0 ? \`&excludedProtocols=\${encodeURIComponent(JSON.stringify(excludedProtocols))}\` : '';
+    const excludedSSParam = excludedSSMethods.trim() ? \`&excludedSSMethods=\${encodeURIComponent(excludedSSMethods)}\` : '';
+    
+    const xrayUrl = \`\${window.location.origin}/xray?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}\${excludedParam}\${excludedSSParam}\${configParam}\`;
+    const singboxUrl = \`\${window.location.origin}/singbox?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${configParam}\`;
+    const clashUrl = \`\${window.location.origin}/clash?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${configParam}\`;
+    const surgeUrl = \`\${window.location.origin}/surge?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${configParam}\`;
+    
     document.getElementById('xrayLink').value = xrayUrl;
     document.getElementById('singboxLink').value = singboxUrl;
     document.getElementById('clashLink').value = clashUrl;
@@ -685,6 +703,30 @@ const submitFormFunction = () => `
         } catch (e) {
           console.error('Error parsing custom rules:', e);
         }
+      }
+
+      // Parse excluded protocols
+      const excludedProtocols = params.get('excludedProtocols');
+      if (excludedProtocols) {
+        try {
+          const protocols = JSON.parse(decodeURIComponent(excludedProtocols));
+          if (Array.isArray(protocols)) {
+            protocols.forEach(protocol => {
+              const checkbox = document.querySelector(\`input[name="excludedProtocols"][value="\${protocol}"]\`);
+              if (checkbox) {
+                checkbox.checked = true;
+              }
+            });
+          }
+        } catch (e) {
+          console.error('Error parsing excluded protocols:', e);
+        }
+      }
+
+      // Parse excluded SS methods
+      const excludedSSMethods = params.get('excludedSSMethods');
+      if (excludedSSMethods) {
+        document.getElementById('excludedSSMethods').value = decodeURIComponent(excludedSSMethods);
       }
 
       // Parse configuration ID
@@ -804,6 +846,28 @@ const submitFormFunction = () => `
       document.getElementById('configType').value = savedConfigType;
     }
     
+    // Load excluded protocols
+    const savedExcludedProtocols = localStorage.getItem('excludedProtocols');
+    if (savedExcludedProtocols) {
+      try {
+        const excludedProtocols = JSON.parse(savedExcludedProtocols);
+        excludedProtocols.forEach(protocol => {
+          const checkbox = document.querySelector(\`input[name="excludedProtocols"][value="\${protocol}"]\`);
+          if (checkbox) {
+            checkbox.checked = true;
+          }
+        });
+      } catch (e) {
+        console.error('Error parsing excluded protocols:', e);
+      }
+    }
+    
+    // Load excluded SS methods
+    const savedExcludedSSMethods = localStorage.getItem('excludedSSMethods');
+    if (savedExcludedSSMethods) {
+      document.getElementById('excludedSSMethods').value = savedExcludedSSMethods;
+    }
+    
     const savedCustomPath = localStorage.getItem('customPath');
     if (savedCustomPath) {
       document.getElementById('customShortCode').value = savedCustomPath;
@@ -845,6 +909,7 @@ const submitFormFunction = () => `
     localStorage.removeItem('configEditor'); 
     localStorage.removeItem('configType');
     localStorage.removeItem('userAgent');
+    localStorage.removeItem('excludedProtocols');
     
     document.getElementById('inputTextarea').value = '';
     document.getElementById('advancedToggle').checked = false;
@@ -852,6 +917,17 @@ const submitFormFunction = () => `
     document.getElementById('configEditor').value = '';
     document.getElementById('configType').value = 'singbox'; 
     document.getElementById('customUA').value = '';
+    
+    // Clear excluded protocols
+    const excludedProtocolCheckboxes = document.querySelectorAll('input[name="excludedProtocols"]');
+    excludedProtocolCheckboxes.forEach(checkbox => {
+      checkbox.checked = false;
+    });
+    localStorage.removeItem('excludedProtocols');
+    
+    // Clear excluded SS methods
+    document.getElementById('excludedSSMethods').value = '';
+    localStorage.removeItem('excludedSSMethods');
     
     localStorage.removeItem('customPath');
     document.getElementById('customShortCode').value = '';
@@ -1373,4 +1449,82 @@ const clearConfig = () => `
     window.history.pushState({}, '', currentUrl);
     localStorage.removeItem('configEditor');
   }
+`;
+
+const generateProtocolFilterSection = () => `
+  <div class="form-section">
+    <div class="form-section-title d-flex align-items-center">
+      ${t('protocolFilter')}
+      <span class="tooltip-icon ms-2">
+        <i class="fas fa-question-circle"></i>
+        <span class="tooltip-content">
+          ${t('protocolFilterTooltip')}
+        </span>
+      </span>
+    </div>
+    <div class="content-container">
+      <div class="row">
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="filterShadowsocks" name="excludedProtocols" value="shadowsocks">
+            <label class="form-check-label" for="filterShadowsocks">
+              ${t('filterShadowsocks')}
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="filterVmess" name="excludedProtocols" value="vmess">
+            <label class="form-check-label" for="filterVmess">
+              ${t('filterVmess')}
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="filterVless" name="excludedProtocols" value="vless">
+            <label class="form-check-label" for="filterVless">
+              ${t('filterVless')}
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="filterHysteria2" name="excludedProtocols" value="hysteria2">
+            <label class="form-check-label" for="filterHysteria2">
+              ${t('filterHysteria2')}
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="filterTrojan" name="excludedProtocols" value="trojan">
+            <label class="form-check-label" for="filterTrojan">
+              ${t('filterTrojan')}
+            </label>
+          </div>
+        </div>
+        <div class="col-md-4 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="filterTuic" name="excludedProtocols" value="tuic">
+            <label class="form-check-label" for="filterTuic">
+              ${t('filterTuic')}
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="content-container mt-3">
+      <div class="form-section-title d-flex align-items-center">
+        ${t('ssMethodFilter')}
+        <span class="tooltip-icon ms-2">
+          <i class="fas fa-question-circle"></i>
+          <span class="tooltip-content">
+            ${t('ssMethodFilterTooltip')}
+          </span>
+        </span>
+      </div>
+      <input type="text" class="form-control" id="excludedSSMethods" name="excludedSSMethods" placeholder="${t('ssMethodPlaceholder')}">
+    </div>
+  </div>
 `;

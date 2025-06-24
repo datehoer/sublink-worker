@@ -104,7 +104,21 @@ const translations = {
       'GLOBAL': 'GLOBAL'
     },
     UASettings: '自定义UserAgent',
-    UAtip: '默认值curl/7.74.0'
+    UAtip: '默认值curl/7.74.0',
+    // 协议过滤功能
+    protocolFilter: '协议过滤',
+    protocolFilterTooltip: '选择要过滤掉的协议类型，被选中的协议将不会包含在生成的配置中',
+    filterShadowsocks: 'ShadowSocks',
+    filterVmess: 'VMess',
+    filterVless: 'VLESS',
+    filterHysteria2: 'Hysteria2',
+    filterTrojan: 'Trojan',
+    filterTuic: 'TUIC',
+    excludeProtocols: '排除协议',
+    // ShadowSocks 加密方法过滤
+    ssMethodFilter: 'SS加密方法过滤',
+    ssMethodFilterTooltip: '排除指定加密方法的ShadowSocks节点，多个方法用逗号分隔',
+    ssMethodPlaceholder: '例如：aes-256-gcm,chacha20-poly1305'
   },
   'en-US': {
     missingInput: 'Missing input parameter',
@@ -208,7 +222,21 @@ const translations = {
       'GLOBAL': 'GLOBAL'
     },
     UASettings: 'Custom UserAgent',
-    UAtip: 'By default it will use curl/7.74.0'
+    UAtip: 'By default it will use curl/7.74.0',
+    // Protocol filter functionality
+    protocolFilter: 'Protocol Filter',
+    protocolFilterTooltip: 'Select protocol types to exclude from generated configurations',
+    filterShadowsocks: 'ShadowSocks',
+    filterVmess: 'VMess',
+    filterVless: 'VLESS',
+    filterHysteria2: 'Hysteria2',
+    filterTrojan: 'Trojan',
+    filterTuic: 'TUIC',
+    excludeProtocols: 'Exclude Protocols',
+    // ShadowSocks 加密方法过滤
+    ssMethodFilter: 'SS Method Filter',
+    ssMethodFilterTooltip: 'Exclude ShadowSocks nodes with specified encryption methods, separate multiple methods with commas',
+    ssMethodPlaceholder: 'e.g.: aes-256-gcm,chacha20-poly1305'
   },
   'fa': {
     missingInput: 'پارامتر ورودی وجود ندارد',
@@ -312,7 +340,21 @@ const translations = {
       'GLOBAL': 'GLOBAL'
     },
     UASettings: 'UserAgent سفارشی',
-    UAtip: 'به طور پیش‌فرض از curl/7.74.0 استفاده می‌کند'
+    UAtip: 'به طور پیش‌فرض از curl/7.74.0 استفاده می‌کند',
+    // Protocol filter functionality
+    protocolFilter: 'Protocol Filter',
+    protocolFilterTooltip: 'Select protocol types to exclude from generated configurations',
+    filterShadowsocks: 'ShadowSocks',
+    filterVmess: 'VMess',
+    filterVless: 'VLESS',
+    filterHysteria2: 'Hysteria2',
+    filterTrojan: 'Trojan',
+    filterTuic: 'TUIC',
+    excludeProtocols: 'Exclude Protocols',
+    // ShadowSocks 加密方法过滤
+    ssMethodFilter: 'SS Method Filter',
+    ssMethodFilterTooltip: 'Exclude ShadowSocks nodes with specified encryption methods, separate multiple methods with commas',
+    ssMethodPlaceholder: 'e.g.: aes-256-gcm,chacha20-poly1305'
   },
   'ru': {
     missingInput: 'Отсутствует входной параметр',
@@ -416,7 +458,21 @@ const translations = {
       'GLOBAL': 'GLOBAL'
     },
     UASettings: 'Пользовательский UserAgent',
-    UAtip: 'По умолчанию используется curl/7.74.0'
+    UAtip: 'По умолчанию используется curl/7.74.0',
+    // Protocol filter functionality
+    protocolFilter: 'Protocol Filter',
+    protocolFilterTooltip: 'Select protocol types to exclude from generated configurations',
+    filterShadowsocks: 'ShadowSocks',
+    filterVmess: 'VMess',
+    filterVless: 'VLESS',
+    filterHysteria2: 'Hysteria2',
+    filterTrojan: 'Trojan',
+    filterTuic: 'TUIC',
+    excludeProtocols: 'Exclude Protocols',
+    // ShadowSocks 加密方法过滤
+    ssMethodFilter: 'SS Method Filter',
+    ssMethodFilterTooltip: 'Exclude ShadowSocks nodes with specified encryption methods, separate multiple methods with commas',
+    ssMethodPlaceholder: 'e.g.: aes-256-gcm,chacha20-poly1305'
   }
 };
 

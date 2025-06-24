@@ -4,13 +4,16 @@ import { t, setLanguage } from './i18n/index.js';
 import { generateRules, getOutbounds, PREDEFINED_RULE_SETS } from './config.js';
 
 export class BaseConfigBuilder {
-    constructor(inputString, baseConfig, lang, userAgent) {
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols = [], excludedSSMethods = '') {
         this.inputString = inputString;
-        this.config = DeepCopy(baseConfig);
-        this.customRules = [];
-        this.selectedRules = [];
-        setLanguage(lang);
+        this.selectedRules = selectedRules;
+        this.customRules = customRules;
+        this.baseConfig = baseConfig;
+        this.lang = lang;
         this.userAgent = userAgent;
+        this.excludedProtocols = excludedProtocols;
+        this.excludedSSMethods = excludedSSMethods ? excludedSSMethods.split(',').map(method => method.trim().toLowerCase()) : [];
+        setLanguage(lang);
     }
 
     async build() {
@@ -137,7 +140,28 @@ export class BaseConfigBuilder {
 
     addCustomItems(customItems) {
         const validItems = customItems.filter(item => item != null);
-        validItems.forEach(item => {
+        
+        // Filter out excluded protocols
+        const filteredItems = validItems.filter(item => {
+            if (!item?.type) return true;
+            
+            // Check excluded protocols
+            if (this.excludedProtocols.includes(item.type)) {
+                return false;
+            }
+            
+            // Check excluded SS methods for ShadowSocks
+            if (item.type === 'shadowsocks' && this.excludedSSMethods.length > 0) {
+                const method = item.method ? item.method.toLowerCase() : '';
+                if (this.excludedSSMethods.includes(method)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        filteredItems.forEach(item => {
             if (item?.tag) {
                 const convertedProxy = this.convertProxy(item);
                 if (convertedProxy) {
