@@ -82,7 +82,7 @@ function filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods = '',
     
     if (nameFilterRegex) {
       let lineDecodeUri = decodeURIComponent(trimmedLine);
-      const nameFilters = this.nameFilterRegex.split(',').map(s => s.trim()).filter(s => s);
+      const nameFilters = nameFilterRegex.split(',').map(s => s.trim()).filter(s => s);
       const matches = nameFilters.some(pattern => {
         try {
           const regex = new RegExp(pattern, 'i');
