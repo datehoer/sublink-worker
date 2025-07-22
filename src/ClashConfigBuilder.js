@@ -163,7 +163,7 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         if (similarProxies.length > 0) {
             proxy.name = `${proxy.name} ${similarProxies.length + 1}`;
         }
-    
+        proxy.name = proxy.name.replace(/\p{Emoji}/gu, '')
         // Add the proxy to the configuration
         this.config.proxies.push(proxy);
     }
