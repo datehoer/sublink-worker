@@ -5,11 +5,11 @@ import { DeepCopy } from './utils.js';
 import { t } from './i18n/index.js';
 
 export class ClashConfigBuilder extends BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols = [], excludedSSMethods = '') {
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols = [], excludedSSMethods = '', nameFilterRegex = '') {
         if (!baseConfig) {
             baseConfig = CLASH_CONFIG;
         }
-        super(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods);
+        super(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods, nameFilterRegex);
         this.selectedRules = selectedRules;
         this.customRules = customRules;
         this.config = DeepCopy(baseConfig || CLASH_CONFIG);

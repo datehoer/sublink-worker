@@ -592,11 +592,17 @@ const submitFormFunction = () => `
     // Get excluded SS methods
     const excludedSSMethods = document.getElementById('excludedSSMethods').value;
     
+    // Get name filter regex
+    const nameFilterRegex = document.getElementById('nameFilterRegex').value;
+    
     // Save excluded protocols to localStorage
     localStorage.setItem('excludedProtocols', JSON.stringify(excludedProtocols));
     
     // Save excluded SS methods to localStorage
     localStorage.setItem('excludedSSMethods', excludedSSMethods);
+
+    // Save name filter regex to localStorage
+    localStorage.setItem('nameFilterRegex', nameFilterRegex);
     
     let selectedRules;
     const predefinedRules = document.getElementById('predefinedRules').value;
@@ -615,11 +621,12 @@ const submitFormFunction = () => `
     const configParam = configId ? \`&configId=\${configId}\` : '';
     const excludedParam = excludedProtocols.length > 0 ? \`&excludedProtocols=\${encodeURIComponent(JSON.stringify(excludedProtocols))}\` : '';
     const excludedSSParam = excludedSSMethods.trim() ? \`&excludedSSMethods=\${encodeURIComponent(excludedSSMethods)}\` : '';
+    const nameFilterRegexParam = nameFilterRegex.trim() ? \`&nameFilterRegex=\${encodeURIComponent(nameFilterRegex)}\` : '';
     
-    const xrayUrl = \`\${window.location.origin}/xray?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}\${excludedParam}\${excludedSSParam}\${configParam}\`;
-    const singboxUrl = \`\${window.location.origin}/singbox?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${configParam}\`;
-    const clashUrl = \`\${window.location.origin}/clash?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${configParam}\`;
-    const surgeUrl = \`\${window.location.origin}/surge?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${configParam}\`;
+    const xrayUrl = \`\${window.location.origin}/xray?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}\${excludedParam}\${excludedSSParam}\${nameFilterRegexParam}\${configParam}\`;
+    const singboxUrl = \`\${window.location.origin}/singbox?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${nameFilterRegexParam}\${configParam}\`;
+    const clashUrl = \`\${window.location.origin}/clash?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${nameFilterRegexParam}\${configParam}\`;
+    const surgeUrl = \`\${window.location.origin}/surge?config=\${encodeURIComponent(inputString)}&ua=\${encodeURIComponent(userAgent)}&selectedRules=\${encodeURIComponent(JSON.stringify(selectedRules))}&customRules=\${encodeURIComponent(JSON.stringify(customRules))}\${excludedParam}\${excludedSSParam}\${nameFilterRegexParam}\${configParam}\`;
     
     document.getElementById('xrayLink').value = xrayUrl;
     document.getElementById('singboxLink').value = singboxUrl;
@@ -728,6 +735,14 @@ const submitFormFunction = () => `
       if (excludedSSMethods) {
         document.getElementById('excludedSSMethods').value = decodeURIComponent(excludedSSMethods);
       }
+
+      // Parse name filter regex
+      const nameFilterRegex = params.get('nameFilterRegex');
+      if (nameFilterRegex) {
+        document.getElementById('nameFilterRegex').value = decodeURIComponent(nameFilterRegex);
+      }
+      
+      
 
       // Parse configuration ID
       const configId = params.get('configId');
@@ -867,6 +882,12 @@ const submitFormFunction = () => `
     if (savedExcludedSSMethods) {
       document.getElementById('excludedSSMethods').value = savedExcludedSSMethods;
     }
+
+    // Load name filter regex
+    const savedNameFilterRegex = localStorage.getItem('nameFilterRegex');
+    if (savedNameFilterRegex) {
+      document.getElementById('nameFilterRegex').value = savedNameFilterRegex;
+    }
     
     const savedCustomPath = localStorage.getItem('customPath');
     if (savedCustomPath) {
@@ -928,6 +949,10 @@ const submitFormFunction = () => `
     // Clear excluded SS methods
     document.getElementById('excludedSSMethods').value = '';
     localStorage.removeItem('excludedSSMethods');
+
+    // Clear name filter regex
+    document.getElementById('nameFilterRegex').value = '';
+    localStorage.removeItem('nameFilterRegex');
     
     localStorage.removeItem('customPath');
     document.getElementById('customShortCode').value = '';
@@ -1526,5 +1551,18 @@ const generateProtocolFilterSection = () => `
       </div>
       <input type="text" class="form-control" id="excludedSSMethods" name="excludedSSMethods" placeholder="${t('ssMethodPlaceholder')}">
     </div>
+    <div class="content-container mt-3">
+      <div class="form-section-title d-flex align-items-center">
+        ${t('nameFilter')}
+        <span class="tooltip-icon ms-2">
+          <i class="fas fa-question-circle"></i>
+          <span class="tooltip-content">
+            ${t('nameFilterTooltip')}
+          </span>
+        </span>
+      </div>
+      <input type="text" class="form-control" id="nameFilterRegex" name="nameFilterRegex" placeholder="${t('nameFilterPlaceholder')}">
+    </div>
+    
   </div>
 `;

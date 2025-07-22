@@ -8,7 +8,7 @@ import { t, setLanguage } from './i18n/index.js';
 import yaml from 'js-yaml';
 
 // Helper function to filter proxy lines based on excluded protocols
-function filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods = '') {
+function filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods = '', nameFilterRegex = '') {
   if (!excludedProtocols || excludedProtocols.length === 0) {
     const excludedMethods = excludedSSMethods ? excludedSSMethods.split(',').map(method => method.trim().toLowerCase()) : [];
     if (excludedMethods.length === 0) {
@@ -18,10 +18,10 @@ function filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods = '')
   
   const excludedMethods = excludedSSMethods ? excludedSSMethods.split(',').map(method => method.trim().toLowerCase()) : [];
   
+  
   return proxyLines.filter(line => {
     const trimmedLine = line.trim();
     if (!trimmedLine) return false;
-    
     // Check protocol type and filter
     for (const protocol of excludedProtocols) {
       switch (protocol) {
@@ -80,6 +80,23 @@ function filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods = '')
       }
     }
     
+    if (nameFilterRegex) {
+      let lineDecodeUri = decodeURIComponent(trimmedLine);
+      const nameFilters = this.nameFilterRegex.split(',').map(s => s.trim()).filter(s => s);
+      const matches = nameFilters.some(pattern => {
+        try {
+          const regex = new RegExp(pattern, 'i');
+          return regex.test(lineDecodeUri);
+        } catch (e) {
+          console.warn(`Invalid regex pattern: ${pattern}`, e);
+          return false;
+        }
+      });
+      if (matches) {
+          return false;
+      }
+    }
+    
     return true;
   });
 }
@@ -104,6 +121,7 @@ async function handleRequest(request) {
       let customRules = url.searchParams.get('customRules');
       let excludedProtocols = url.searchParams.get('excludedProtocols');
       let excludedSSMethods = url.searchParams.get('excludedSSMethods');
+      let nameFilterRegex = url.searchParams.get('nameFilterRegex');
       // 获取语言参数，如果为空则使用默认值
       let lang = url.searchParams.get('lang') || 'zh-CN';
       // Get custom UserAgent
@@ -151,6 +169,14 @@ async function handleRequest(request) {
         excludedSSMethods = '';
       }
 
+      // Deal with name filter regex
+      try {
+        nameFilterRegex = nameFilterRegex ? decodeURIComponent(nameFilterRegex) : '';
+      } catch (error) {
+        console.error('Error parsing nameFilterRegex:', error);
+        nameFilterRegex = '';
+      }
+
       // Modify the existing conversion logic
       const configId = url.searchParams.get('configId');
       let baseConfig;
@@ -163,11 +189,11 @@ async function handleRequest(request) {
 
       let configBuilder;
       if (url.pathname.startsWith('/singbox')) {
-        configBuilder = new SingboxConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods);
+        configBuilder = new SingboxConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods, nameFilterRegex);
       } else if (url.pathname.startsWith('/clash')) {
-        configBuilder = new ClashConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods);
+        configBuilder = new ClashConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods, nameFilterRegex);
       } else {
-        configBuilder = new SurgeConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods)
+        configBuilder = new SurgeConfigBuilder(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods, nameFilterRegex)
           .setSubscriptionUrl(url.href);
       }
 
@@ -253,7 +279,7 @@ async function handleRequest(request) {
       const inputString = url.searchParams.get('config');
       let excludedProtocols = url.searchParams.get('excludedProtocols');
       let excludedSSMethods = url.searchParams.get('excludedSSMethods');
-      
+      let nameFilterRegex = url.searchParams.get('nameFilterRegex');
       // Deal with excluded protocols for Xray
       try {
         excludedProtocols = excludedProtocols ? JSON.parse(decodeURIComponent(excludedProtocols)) : [];
@@ -268,6 +294,14 @@ async function handleRequest(request) {
       } catch (error) {
         console.error('Error parsing excludedSSMethods for Xray:', error);
         excludedSSMethods = '';
+      }
+
+      // Deal with name filter regex
+      try {
+        nameFilterRegex = nameFilterRegex ? decodeURIComponent(nameFilterRegex) : '';
+      } catch (error) {
+        console.error('Error parsing nameFilterRegex for Xray:', error);
+        nameFilterRegex = '';
       }
       
       const proxylist = inputString.split('\n');
@@ -299,14 +333,14 @@ async function handleRequest(request) {
             
             // Filter protocols for decoded proxy list
             const proxyLines = decodedText.split('\n');
-            const filteredProxyLines = filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods);
+            const filteredProxyLines = filterProxyLines(proxyLines, excludedProtocols, excludedSSMethods, nameFilterRegex);
             finalProxyList.push(...filteredProxyLines);
           } catch (e) {
             console.warn('Failed to fetch the proxy:', e);
           }
         } else {
           // Filter individual proxy line
-          const filteredProxy = filterProxyLines([proxy], excludedProtocols, excludedSSMethods);
+          const filteredProxy = filterProxyLines([proxy], excludedProtocols, excludedSSMethods, nameFilterRegex);
           if (filteredProxy.length > 0) {
             finalProxyList.push(...filteredProxy);
           }

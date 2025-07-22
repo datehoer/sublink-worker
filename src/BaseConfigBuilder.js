@@ -4,7 +4,7 @@ import { t, setLanguage } from './i18n/index.js';
 import { generateRules, getOutbounds, PREDEFINED_RULE_SETS } from './config.js';
 
 export class BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols = [], excludedSSMethods = '') {
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols = [], excludedSSMethods = '', nameFilterRegex = '') {
         this.inputString = inputString;
         this.selectedRules = selectedRules;
         this.customRules = customRules;
@@ -13,6 +13,7 @@ export class BaseConfigBuilder {
         this.userAgent = userAgent;
         this.excludedProtocols = excludedProtocols;
         this.excludedSSMethods = excludedSSMethods ? excludedSSMethods.split(',').map(method => method.trim().toLowerCase()) : [];
+        this.nameFilterRegex = nameFilterRegex;
         setLanguage(lang);
     }
 
@@ -158,6 +159,23 @@ export class BaseConfigBuilder {
                 }
             }
             
+            // Check name filter regex
+            if (this.nameFilterRegex) {
+                const name = item.tag || '';
+                const nameFilters = this.nameFilterRegex.split(',').map(s => s.trim()).filter(s => s);
+                const matches = nameFilters.some(pattern => {
+                    try {
+                      const regex = new RegExp(pattern, 'i');
+                      return regex.test(name);
+                    } catch (e) {
+                      console.warn(`Invalid regex pattern: ${pattern}`, e);
+                      return false;
+                    }
+                  });
+                if (matches) {
+                    return false;
+                }
+            }
             return true;
         });
         

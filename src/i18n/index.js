@@ -115,6 +115,9 @@ const translations = {
     filterTrojan: 'Trojan',
     filterTuic: 'TUIC',
     excludeProtocols: '排除协议',
+    nameFilter: '名称过滤',
+    nameFilterTooltip: '排除不符合正则表达式的节点',
+    nameFilterPlaceholder: '例如：^.*-vless.*$',
     // ShadowSocks 加密方法过滤
     ssMethodFilter: 'SS加密方法过滤',
     ssMethodFilterTooltip: '排除指定加密方法的ShadowSocks节点，多个方法用逗号分隔',
@@ -235,6 +238,9 @@ const translations = {
     excludeProtocols: 'Exclude Protocols',
     // ShadowSocks 加密方法过滤
     ssMethodFilter: 'SS Method Filter',
+    nameFilter: 'Name Filter',
+    nameFilterTooltip: 'Exclude nodes that do not match the name filter regex',
+    nameFilterPlaceholder: 'e.g.: ^.*-vless.*$',
     ssMethodFilterTooltip: 'Exclude ShadowSocks nodes with specified encryption methods, separate multiple methods with commas',
     ssMethodPlaceholder: 'e.g.: aes-256-gcm,chacha20-poly1305'
   },
@@ -353,6 +359,9 @@ const translations = {
     excludeProtocols: 'Exclude Protocols',
     // ShadowSocks 加密方法过滤
     ssMethodFilter: 'SS Method Filter',
+    nameFilter: 'Name Filter',
+    nameFilterTooltip: 'Exclude nodes that do not match the name filter regex',
+    nameFilterPlaceholder: 'e.g.: ^.*-vless.*$',
     ssMethodFilterTooltip: 'Exclude ShadowSocks nodes with specified encryption methods, separate multiple methods with commas',
     ssMethodPlaceholder: 'e.g.: aes-256-gcm,chacha20-poly1305'
   },
@@ -471,6 +480,9 @@ const translations = {
     excludeProtocols: 'Exclude Protocols',
     // ShadowSocks 加密方法过滤
     ssMethodFilter: 'SS Method Filter',
+    nameFilter: 'Name Filter',
+    nameFilterTooltip: 'Exclude nodes that do not match the name filter regex',
+    nameFilterPlaceholder: 'e.g.: ^.*-vless.*$',
     ssMethodFilterTooltip: 'Exclude ShadowSocks nodes with specified encryption methods, separate multiple methods with commas',
     ssMethodPlaceholder: 'e.g.: aes-256-gcm,chacha20-poly1305'
   }

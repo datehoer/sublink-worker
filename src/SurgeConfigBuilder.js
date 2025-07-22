@@ -4,8 +4,8 @@ import { t } from './i18n/index.js';
 import { DeepCopy } from './utils.js';
 
 export class SurgeConfigBuilder extends BaseConfigBuilder {
-    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols = [], excludedSSMethods = '') {
-        super(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods);
+    constructor(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols = [], excludedSSMethods = '', nameFilterRegex = '') {
+        super(inputString, selectedRules, customRules, baseConfig, lang, userAgent, excludedProtocols, excludedSSMethods, nameFilterRegex);
         this.config = DeepCopy(baseConfig || SURGE_CONFIG);
         this.subscriptionUrl = null;
     }
